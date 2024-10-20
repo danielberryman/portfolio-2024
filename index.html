@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Test Website</title>
+</head>
+
+<body>
+  <div id="content"></div>
+  <script>
+    window.onload = function () {
+      console.log("All styles have been loaded.");
+    };
+
+    async function fetchData() {
+      try {
+        const html = await getHtml();
+
+        const tempDiv = document.createElement('html');
+        tempDiv.innerHTML = html;
+        console.log('Fetched content:', tempDiv);
+
+        const headChildren = extractHeadChildren(tempDiv);
+        extractAndInjectBodyContent(tempDiv);
+        const bodyScriptChildren = extractBodyScriptChildren(tempDiv);
+
+        headChildren.forEach(node => {
+          document.head.appendChild(node);
+        });
+
+        bodyScriptChildren.forEach(node => {
+          document.body.appendChild(node);
+        });
+      } catch (error) {
+        console.error('Error fetching content:', error);
+      }
+    }
+
+    async function getHtml() {
+      let response = await fetch('https://web-builder-9b217ad99626.herokuapp.com/sites/1');
+      if (response.status !== 200) {
+        throw new Error('Error fetching content');
+      }
+      response = await fetch('https://web-builder-9b217ad99626.herokuapp.com/ssr?name=1');
+      return await response.text();
+    }
+
+    function extractHeadChildren(div) {
+      const children = [];
+
+      const headContent = div.querySelector('head');
+      if (headContent) {
+        headContent.childNodes.forEach(node => {
+          if (node.tagName === 'SCRIPT') {
+            const script = getScriptToAppend(node);
+            children.push(script);
+          } else if (node.tagName === 'LINK') {
+            const link = document.createElement('link');
+            link.rel = node.rel;
+            link.href = node.href.replace(/file:\/\/\//g, 'https://web-builder-9b217ad99626.herokuapp.com/');
+            children.push(link);
+          } else {
+            children.push(node.cloneNode(true));
+          }
+        });
+      } else {
+        console.warn('No head content found.');
+      }
+
+      return children;
+    }
+
+    function getScriptToAppend(node) {
+      const script = document.createElement('script');
+      if (node.src) {
+        script.src = node.src.replace(/file:\/\/\//g, 'https://web-builder-9b217ad99626.herokuapp.com/');
+      } else {
+        script.textContent = node.textContent;
+      }
+      script.crossOrigin = 'anonymous';
+      console.log('Appending script:', script.src, script.textContent);
+      return script;
+    }
+
+    function extractAndInjectBodyContent(div) {
+      const bodyContent = div.querySelector('body')?.innerHTML || 'No body content found';
+      const contentElement = document.getElementById('content');
+      if (contentElement) {
+        contentElement.innerHTML = bodyContent.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '');
+      } else {
+        console.error('Element with id "content" not found.');
+      }
+    }
+
+    function extractBodyScriptChildren(div) {
+      const bodyScripts = Array.from(div.querySelectorAll('body script'));
+
+      const children = [];
+      bodyScripts.forEach(node => {
+        const script = document.createElement('script');
+        if (node.src) {
+          script.src = node.src.replace(/file:\/\/\//g, 'https://web-builder-9b217ad99626.herokuapp.com/'); // External script
+        } else {
+          script.textContent = node.textContent; // Inline script
+        }
+        script.setAttribute('id', node.id);
+        script.type = 'application/json';
+        script.crossOrigin = 'anonymous';
+        children.push(script);
+      });
+      return children;
+    }
+
+    function removeFoucStyles() {
+      const foucStyleTags = document.querySelectorAll('style[data-next-hide-fouc]');
+      foucStyleTags.forEach(styleTag => {
+        styleTag.remove();
+      });
+      console.log('FOUC styles removed.');
+    }
+
+    fetchData();
+  </script>
+</body>
+
+</html>
