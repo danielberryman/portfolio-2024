@@ -59,7 +59,7 @@
           } else if (node.tagName === 'LINK') {
             const link = document.createElement('link');
             link.rel = node.rel;
-            link.href = node.href.replace(/file:\/\/\//g, 'https://web-builder-9b217ad99626.herokuapp.com/');
+            link.href = node.href.replace(/https\:\/\/danielberryman.github.io/g, 'https://web-builder-9b217ad99626.herokuapp.com/');
             children.push(link);
           } else {
             children.push(node.cloneNode(true));
@@ -75,7 +75,7 @@
     function getScriptToAppend(node) {
       const script = document.createElement('script');
       if (node.src) {
-        script.src = node.src.replace(/file:\/\/\//g, 'https://web-builder-9b217ad99626.herokuapp.com/');
+        script.src = node.src.replace(/https\:\/\/danielberryman.github.io/g, 'https://web-builder-9b217ad99626.herokuapp.com/');
       } else {
         script.textContent = node.textContent;
       }
@@ -101,7 +101,7 @@
       bodyScripts.forEach(node => {
         const script = document.createElement('script');
         if (node.src) {
-          script.src = node.src.replace(/file:\/\/\//g, 'https://web-builder-9b217ad99626.herokuapp.com/'); // External script
+          script.src = node.src.replace(/https\:\/\/danielberryman.github.io/g, 'https://web-builder-9b217ad99626.herokuapp.com/'); // External script
         } else {
           script.textContent = node.textContent; // Inline script
         }
