@@ -20,11 +20,25 @@
 
         let listeners = [];
         headChildren.forEach(node => {
-          handleChildNode(document.head, node, listeners);
+          if ((node.tagName === 'SCRIPT' || node.tagName === 'LINK') && (node.src || node.href)) {
+            listeners.push(node.src || node.href);
+            node.addEventListener('load', () => {
+              console.log('Dynamically added script has loaded', node.src || node.href);
+              listeners = listeners.filter(listener => listener !== (node.src || node.href));
+            });
+          }
+          document.head.appendChild(node);
         });
 
         bodyScriptChildren.forEach(node => {
-          handleChildNode(document.body, node, listeners);
+          if ((node.tagName === 'SCRIPT' || node.tagName === 'LINK') && (node.src || node.href)) {
+            listeners.push(node.src || node.href);
+            node.addEventListener('load', () => {
+              console.log('Dynamically added script has loaded', node.src || node.href);
+              listeners = listeners.filter(listener => listener !== (node.src || node.href));
+            });
+          }
+          document.body.appendChild(node);
         });
 
         setupNextRootElement();
@@ -88,17 +102,6 @@
       }
 
       return children;
-    }
-
-    function handleChildNode(parent, node, listeners) {
-      if ((node.tagName === 'SCRIPT' || node.tagName === 'LINK') && (node.src || node.href)) {
-        listeners.push(node.src || node.href);
-        node.addEventListener('load', () => {
-          console.log('Dynamically added script has loaded', node.src || node.href);
-          listeners = listeners.filter(listener => listener !== (node.src || node.href));
-        });
-      }
-      parent.appendChild(node);
     }
 
     function getScriptToAppend(node) {
