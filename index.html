@@ -10,31 +10,52 @@
 <body>
   <div id="content"></div>
   <script>
-    window.onload = function () {
-      console.log("All styles have been loaded.");
-    };
-
     async function fetchData() {
       try {
         const html = await getHtml();
+
+        setFoucStyles();
 
         const tempDiv = document.createElement('html');
         tempDiv.innerHTML = html;
         console.log('Fetched content:', tempDiv);
 
         const headChildren = extractHeadChildren(tempDiv);
-        extractAndInjectBodyContent(tempDiv);
         const bodyScriptChildren = extractBodyScriptChildren(tempDiv);
 
+        let listeners = [];
         headChildren.forEach(node => {
+          if ((node.tagName === 'SCRIPT' || node.tagName === 'LINK') && (node.src || node.href)) {
+            listeners.push(node.src || node.href);
+            node.addEventListener('load', () => {
+              console.log('Dynamically added script has loaded', node.src || node.href);
+              listeners = listeners.filter(listener => listener !== (node.src || node.href));
+            });
+          }
           document.head.appendChild(node);
         });
 
         bodyScriptChildren.forEach(node => {
+          if ((node.tagName === 'SCRIPT' || node.tagName === 'LINK') && (node.src || node.href)) {
+            listeners.push(node.src || node.href);
+            node.addEventListener('load', () => {
+              console.log('Dynamically added script has loaded', node.src || node.href);
+              listeners = listeners.filter(listener => listener !== (node.src || node.href));
+            });
+          }
           document.body.appendChild(node);
         });
 
+        setupNextRootElement();
+        extractAndInjectNextRootContent(tempDiv);
+
+        while (listeners.length > 0) {
+          console.log('Waiting for scripts and links to load...');
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+
         removeFoucStyles();
+        triggerTransitions();
       } catch (error) {
         console.error('Error fetching content:', error);
       }
@@ -47,6 +68,13 @@
       }
       response = await fetch('https://web-builder-9b217ad99626.herokuapp.com/ssr?name=1');
       return await response.text();
+    }
+
+    function setFoucStyles() {
+      const styleElement = document.createElement('style');
+      styleElement.setAttribute('data-next-hide-fouc', '');
+      styleElement.innerHTML = 'html { display: none; }';
+      document.head.appendChild(styleElement);
     }
 
     function extractHeadChildren(div) {
@@ -88,13 +116,20 @@
       return script;
     }
 
-    function extractAndInjectBodyContent(div) {
-      const bodyContent = div.querySelector('body')?.innerHTML || 'No body content found';
-      const contentElement = document.getElementById('content');
-      if (contentElement) {
-        contentElement.innerHTML = bodyContent.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '');
+    function setupNextRootElement() {
+      const targetElement = document.getElementById('content');
+      const newElement = document.createElement('div');
+      newElement.id = '__next';
+      targetElement.appendChild(newElement);
+    }
+
+    function extractAndInjectNextRootContent(div) {
+      const targetElement = document.getElementById('__next');
+      const nextRootContent = div.querySelector('#__next').innerHTML || 'No Next root content found';
+      if (targetElement) {
+        targetElement.innerHTML = nextRootContent;
       } else {
-        console.error('Element with id "content" not found.');
+        console.error('Element with id "__next" not found.');
       }
     }
 
@@ -128,6 +163,22 @@
       console.log('FOUC styles removed.');
     }
 
+    function triggerTransitions() {
+      const elements = document.querySelectorAll('.custom_fade');
+      setTimeout(() => {
+        elements.forEach(element => {
+          element.classList.add('custom_visible');
+        });
+
+        setTimeout(() => {
+          elements.forEach(element => {
+            element.classList.remove('custom_fade');
+            element.classList.remove('custom_visible');
+          });
+        }, 1000);
+      }, 1000);
+    }
+    
     fetchData();
   </script>
 </body>
