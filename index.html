@@ -4,12 +4,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Test Website</title>
+  <title>Daniel Berryman | Web Developer & Music Maker</title>
 </head>
 
 <body>
   <div id="content"></div>
   <script>
+    const env = 'development';
+    const isProduction = env === 'production';
+    const hostRegex = isProduction ? /https\:\/\/www.danielberryman.com/g : /file\:\/\/\//g;
+    const webBuilderHost = isProduction ? 'https://web-builder-9b217ad99626.herokuapp.com' : 'http://localhost:3000';
+    const siteName = '1';
+
     async function doWork() {
       try {
         const html = await getHtml();
@@ -57,11 +63,11 @@
     }
 
     async function getHtml() {
-      let response = await fetch('https://web-builder-9b217ad99626.herokuapp.com/sites/1');
+      let response = await fetch(`${webBuilderHost}/sites/${siteName}`);
       if (response.status !== 200) {
         throw new Error('Error fetching content');
       }
-      response = await fetch('https://web-builder-9b217ad99626.herokuapp.com/ssr?name=1');
+      response = await fetch(`${webBuilderHost}/ssr?name=${siteName}`);
       return await response.text();
     }
 
@@ -91,7 +97,7 @@
             const link = document.createElement('link');
             link.rel = node.rel;
             link.as = node.as;
-            link.href = node.href.replace(/https\:\/\/www.danielberryman.com/g, 'https://web-builder-9b217ad99626.herokuapp.com');
+            link.href = node.href.replace(hostRegex, `${webBuilderHost}/`);
             children.push(link);
           } else {
             children.push(node.cloneNode(true));
@@ -107,7 +113,7 @@
     function getScriptToAppend(node) {
       const script = document.createElement('script');
       if (node.src) {
-        script.src = node.src.replace(/https\:\/\/www.danielberryman.com/g, 'https://web-builder-9b217ad99626.herokuapp.com');
+        script.src = node.src.replace(hostRegex, `${webBuilderHost}/`);
       } else {
         script.textContent = node.textContent;
       }
@@ -141,7 +147,7 @@
       bodyScripts.forEach(node => {
         const script = document.createElement('script');
         if (node.src) {
-          script.src = node.src.replace(/https\:\/\/www.danielberryman.com/g, 'https://web-builder-9b217ad99626.herokuapp.com'); // External script
+          script.src = node.src.replace(hostRegex, `${webBuilderHost}/`);
         } else {
           script.textContent = node.textContent;
         }
