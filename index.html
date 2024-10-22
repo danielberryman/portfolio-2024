@@ -98,7 +98,7 @@
             const link = document.createElement('link');
             link.rel = node.rel;
             link.as = node.as;
-            link.href = node.href.replace(hostRegex, `${webBuilderHost}/`);
+            link.href = node.href.replace(hostRegex, webBuilderHost);
             children.push(link);
           } else {
             children.push(node.cloneNode(true));
@@ -114,7 +114,7 @@
     function getScriptToAppend(node) {
       const script = document.createElement('script');
       if (node.src) {
-        script.src = node.src.replace(hostRegex, `${webBuilderHost}/`);
+        script.src = node.src.replace(hostRegex, webBuilderHost);
       } else {
         script.textContent = node.textContent;
       }
@@ -148,7 +148,7 @@
       bodyScripts.forEach(node => {
         const script = document.createElement('script');
         if (node.src) {
-          script.src = node.src.replace(hostRegex, `${webBuilderHost}/`);
+          script.src = node.src.replace(hostRegex, webBuilderHost);
         } else {
           script.textContent = node.textContent;
         }
