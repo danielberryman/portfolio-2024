@@ -5,16 +5,58 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Daniel Berryman | Web Developer & Music Maker</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background-color: #f4f4f4;
+    }
+
+    #loader {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.9); /* Optional background */
+    }
+
+    .spinner {
+      width: 60px;
+      height: 60px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #36BF74;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
   <link rel="icon" href="https://web-builder-9b217ad99626.herokuapp.com/public/images/favicon.ico" type="image/x-icon">
 </head>
 
 <body>
+  <div id="loader">
+    <div class="spinner"></div>
+  </div>
   <div id="content"></div>
   <script>
-    const env = 'production';
+    const env = 'developement';
     const isProduction = env === 'production';
     const hostRegex = isProduction ? /https\:\/\/www.danielberryman.com/g : /file\:\/\/\//g;
-    const webBuilderHost = isProduction ? 'https://web-builder-9b217ad99626.herokuapp.com' : 'http://localhost:3000';
+    const webBuilderHost = isProduction ? 'https://web-builder-9b217ad99626.herokuapp.com' : 'http://localhost:3000/';
     const siteName = '1';
 
     async function doWork() {
@@ -64,11 +106,11 @@
     }
 
     async function getHtml() {
-      let response = await fetch(`${webBuilderHost}/sites/${siteName}`);
+      let response = await fetch(`${webBuilderHost}sites/${siteName}`);
       if (response.status !== 200) {
         throw new Error('Error fetching content');
       }
-      response = await fetch(`${webBuilderHost}/ssr?name=${siteName}`);
+      response = await fetch(`${webBuilderHost}ssr?name=${siteName}`);
       return await response.text();
     }
 
@@ -164,6 +206,8 @@
     }
 
     function removeFoucStyles() {
+      document.getElementById('loader').style.display = 'none';
+      document.body.style.display = 'block';
       const foucStyleTags = document.querySelectorAll('style[data-next-hide-fouc]');
       foucStyleTags.forEach(styleTag => {
         styleTag.remove();
