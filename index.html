@@ -2,9 +2,21 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Daniel Berryman | Web Developer & Music Maker</title>
+  <title>Daniel Berryman | Web Developer</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <meta name="next-head-count" content="2"><noscript data-n-css=""></noscript>
+  <style data-next-hide-fouc="true">
+    body {
+      display: none
+    }
+  </style><noscript data-next-hide-fouc="true">
+    <style>
+      body {
+        display: block
+      }
+    </style>
+  </noscript>
   <style>
     body {
       margin: 0;
@@ -22,7 +34,6 @@
       position: absolute;
       width: 100%;
       height: 100%;
-      background-color: rgba(255, 255, 255, 0.9); /* Optional background */
     }
 
     .spinner {
@@ -38,11 +49,21 @@
       0% {
         transform: rotate(0deg);
       }
+
       100% {
         transform: rotate(360deg);
       }
     }
   </style>
+  <script src="https://web-builder-9b217ad99626.herokuapp.com/_next/static/chunks/polyfills.js" crossorigin="anonymous" defer=""></script>
+  <script src="https://web-builder-9b217ad99626.herokuapp.com/_next/static/chunks/webpack.js" crossorigin="anonymous" defer=""></script>
+  <script src="https://web-builder-9b217ad99626.herokuapp.com/_next/static/chunks/main.js" crossorigin="anonymous" defer=""></script>
+  <script src="https://web-builder-9b217ad99626.herokuapp.com/_next/static/chunks/pages/_app.js" crossorigin="anonymous" defer=""></script>
+  <script src="https://web-builder-9b217ad99626.herokuapp.com/_next/static/chunks/pages/ssr.js" crossorigin="anonymous" defer=""></script>
+  <script src="https://web-builder-9b217ad99626.herokuapp.com/_next/static/development/_buildManifest.js" crossorigin="anonymous"
+    defer=""></script>
+  <script src="https://web-builder-9b217ad99626.herokuapp.com/_next/static/development/_ssgManifest.js" crossorigin="anonymous"
+    defer=""></script><noscript id="__next_css__DO_NOT_USE__"></noscript>
   <link rel="icon" href="https://web-builder-9b217ad99626.herokuapp.com/public/images/favicon.ico" type="image/x-icon">
 </head>
 
@@ -50,161 +71,57 @@
   <div id="loader">
     <div class="spinner"></div>
   </div>
-  <div id="content"></div>
-  <script>
-    const env = 'production';
-    const isProduction = env === 'production';
-    const hostRegex = isProduction ? /https\:\/\/www.danielberryman.com\//g : /file\:\/\/\//g;
-    const webBuilderHost = isProduction ? 'https://web-builder-9b217ad99626.herokuapp.com/' : 'http://localhost:3000/';
-    const siteName = '1';
-
-    async function doWork() {
-      try {
-        const html = await getHtml();
-        setFoucStyles();
-        const tempDiv = getTempDiv(html);
-        const headChildren = extractHeadChildren(tempDiv);
-        const bodyScriptChildren = extractBodyScriptChildren(tempDiv);
-
-        let listeners = [];
-        headChildren.forEach(node => {
-          if ((node.tagName === 'SCRIPT' || node.tagName === 'LINK') && (node.src || node.href)) {
-            listeners.push(node.src || node.href);
-            node.addEventListener('load', () => {
-              console.log('Dynamically added script has loaded', node.src || node.href);
-              listeners = listeners.filter(listener => listener !== (node.src || node.href));
-            });
-          }
-          document.head.appendChild(node);
-        });
-
-        bodyScriptChildren.forEach(node => {
-          if ((node.tagName === 'SCRIPT' || node.tagName === 'LINK') && (node.src || node.href)) {
-            listeners.push(node.src || node.href);
-            node.addEventListener('load', () => {
-              console.log('Dynamically added script has loaded', node.src || node.href);
-              listeners = listeners.filter(listener => listener !== (node.src || node.href));
-            });
-          }
-          document.body.appendChild(node);
-        });
-
-        setupNextRootElement();
-        extractAndInjectNextRootContent(tempDiv);
-
-        while (listeners.length > 0) {
-          console.log('Waiting for scripts and links to load...');
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-
-        removeFoucStyles();
-        triggerTransitions();
-      } catch (error) {
-        console.error('Error fetching content:', error);
-      }
-    }
-
-    async function getHtml() {
-      let response = await fetch(`${webBuilderHost}sites/${siteName}`);
-      if (response.status !== 200) {
-        throw new Error('Error fetching content');
-      }
-      response = await fetch(`${webBuilderHost}ssr?name=${siteName}`);
-      return await response.text();
-    }
-
-    function setFoucStyles() {
-      const styleElement = document.createElement('style');
-      styleElement.setAttribute('data-next-hide-fouc', '');
-      styleElement.innerHTML = 'html { display: none; }';
-      document.head.appendChild(styleElement);
-    }
-
-    function getTempDiv(html) {
-      const tempDiv = document.createElement('html')
-      tempDiv.innerHTML = html;
-      return tempDiv;
-    }
-
-    function extractHeadChildren(div) {
-      const children = [];
-
-      const headContent = div.querySelector('head');
-      if (headContent) {
-        headContent.childNodes.forEach(node => {
-          if (node.tagName === 'SCRIPT') {
-            const script = getScriptToAppend(node);
-            children.push(script);
-          } else if (node.tagName === 'LINK') {
-            const link = document.createElement('link');
-            link.rel = node.rel;
-            link.as = node.as;
-            link.href = node.href.replace(hostRegex, webBuilderHost);
-            children.push(link);
-          } else {
-            children.push(node.cloneNode(true));
-          }
-        });
-      } else {
-        console.warn('No head content found.');
-      }
-
-      return children;
-    }
-
-    function getScriptToAppend(node) {
-      const script = document.createElement('script');
-      if (node.src) {
-        script.src = node.src.replace(hostRegex, webBuilderHost);
-      } else {
-        script.textContent = node.textContent;
-      }
-      script.crossOrigin = 'anonymous';
-      script.defer = true;
-      console.log('Appending script:', script.src, script.textContent);
-      return script;
-    }
-
-    function setupNextRootElement() {
-      const targetElement = document.getElementById('content');
-      const newElement = document.createElement('div');
-      newElement.id = '__next';
-      targetElement.appendChild(newElement);
-    }
-
-    function extractAndInjectNextRootContent(div) {
-      const targetElement = document.getElementById('__next');
-      const nextRootContent = div.querySelector('#__next').innerHTML || 'No Next root content found';
-      if (targetElement) {
-        targetElement.innerHTML = nextRootContent;
-      } else {
-        console.error('Element with id "__next" not found.');
-      }
-    }
-
-    function extractBodyScriptChildren(div) {
-      const bodyScripts = Array.from(div.querySelectorAll('body script'));
-
-      const children = [];
-      bodyScripts.forEach(node => {
-        const script = document.createElement('script');
-        if (node.src) {
-          script.src = node.src.replace(hostRegex, webBuilderHost);
-        } else {
-          script.textContent = node.textContent;
-        }
-        script.setAttribute('id', node.id);
-        script.crossOrigin = 'anonymous';
-        script.defer = true;
-        if (script.id === '__NEXT_DATA__') {
-          script.type = 'application/json';
-        }
-        children.push(script);
-      });
-      return children;
-    }
-
-    function removeFoucStyles() {
+  <div id="__next">
+    <div class="TemplateOne_container__VKYmr">
+      <div class="custom_fade">
+        <div class="Grid12_container__2T3rS">
+          <div class="GridItem_container__IJ91L GridItem4_container__s1ZwA">
+            <div class="CardOne_container__ZiW6B"
+              style="background-image:url(https://web-builder-9b217ad99626.herokuapp.com/public/images/daniel_small_headshot_72ppi.jpg);background-size:cover;background-position:center">
+              <div class="CardContentStyle_container__hmKpi CardContentStyle_bottom_left_with_logo__HpkkT">
+                <h1 style="color:white;font-weight:100;font-family:Didot;margin:0;padding:0 0 0 .5rem">
+                  <span>Daniel Berryman<br></span>
+                </h1>
+                <h2 style="color:white;font-weight:100;font-family:Didot;margin:0;padding:0 0 .5rem .5rem">
+                  <span>Web Developer &amp; Music Maker<br></span>
+                </h2>
+              </div>
+            </div>
+          </div>
+          <div class="GridItem_container__IJ91L GridItem4_container__s1ZwA">
+            <div class="CardOne_container__ZiW6B" style="background-color:#36BF74">
+              <div class="CardContentStyle_container__hmKpi CardContentStyle_centered__VMrt1">
+                <h1 style="color:white;font-weight:100;font-family:Didot;margin:0;padding:0 0 0 .5rem">
+                  <span>Vision<br></span>
+                </h1>
+              </div>
+            </div>
+          </div>
+          <div class="GridItem_container__IJ91L GridItem4_container__s1ZwA">
+            <div class="CardOne_container__ZiW6B" style="background-color:#CE3434">
+              <div class="CardContentStyle_container__hmKpi CardContentStyle_centered__VMrt1">
+                <h1 style="color:white;font-weight:100;font-family:Didot;margin:0;padding:0 0 0 .5rem">
+                  <span>Process<br></span>
+                </h1>
+              </div>
+            </div>
+          </div>
+          <div class="GridItem_container__IJ91L GridItem4_container__s1ZwA">
+            <div class="CardOne_container__ZiW6B" style="background-color:#5143D0">
+              <div class="CardContentStyle_container__hmKpi CardContentStyle_centered__VMrt1">
+                <h1 style="color:white;font-weight:100;font-family:Didot;margin:0;padding:0 0 0 .5rem">
+                  <span>Skills<br></span>
+                </h1>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script id="__NEXT_DATA__"
+    type="application/json">{"props":{"pageProps":{"config":{"name":"1","template":1,"properties":{"components":{"cards":[{"type":"card-one","contentType":"card-content-one","contentStyleType":"bottom_left_with_logo","title":{"lines":["Daniel Berryman"],"styles":{"color":"white","fontWeight":"100","fontFamily":"Didot"}},"subtitle":{"lines":["Web Developer \u0026 Music Maker"],"styles":{"color":"white","fontWeight":"100","fontFamily":"Didot"}},"content":{"lines":["Who knows who they are? Do you?","I started my working life as a performer. I later discovered a love for the world wide web.","You’re looking for a versatile, resourceful, solutions-driven professional who knows how to team up with you, see and learn your value propositions, and work diligently to execute on them.","Hey! You found me :) I’m Daniel.","I'm looking for a senior-level role on a team that joyfully embraces metrics. Beyond successfully completing work based on product requirements, I’m passionate about improving processes. Great teams evaluate themselves, discover their strengths and weaknesses, and strive to level-up.","As a self-taught developer, at first, I didn’t see beyond requirements. On my first team at Herff Jones, I used the grit I earned in the performing arts to debug and support our suite of web products. Then, I moved to a frontend team organized around agile principles and, there, I started to understand the importance of consistent process evaluation.","Most recently, as a Solutions Engineer at Marin Software, while successfully delivering requested custom solutions, I initiated and spearheaded projects to increase error log reporting, monitor operation scalability, and deliver internal tools designed to decrease manual code updates and manual routine script executions.","I'm a unique hire. I'm fascinated by life and fueled by what's possible.","What are you trying to make possible? I'd be curious to know. Let's connect."],"styles":{"color":"white","fontWeight":"regular","fontFamily":"Didot"}},"bgColor":"","bgImg":"https://web-builder-9b217ad99626.herokuapp.com/public/images/daniel_small_headshot_72ppi.jpg"},{"type":"card-one","contentType":"card-content-one","contentStyleType":"centered","title":{"lines":["Vision"],"styles":{"color":"white","fontWeight":"100","fontFamily":"Didot","margin":"0"}},"subtitle":{"lines":[],"styles":{"color":"white","fontWeight":"100","fontFamily":"Didot"}},"content":{"lines":["My goal: Apply my ever-growing technical knowledge to a company's unique value proposition.","Vision can make or break you. The tech field moves at lightning speed. When I read my goal statement above, it sometimes feels simplistic.","It's not.","1. If you don't understand the unique value proposition of the company you work for, then you don't understand the problem. To operate at a high level, you need a deep understanding of the game you're trying to win. Understanding the actual problem is half the battle.","2. The second half of the battle is more obvious. Once you know the problem you want to solve, you need the technical prowess to solve it. But the \"problem\" with problems is that most of them have tons of possible solutions. You need to understand what tools are available, how to use them, and in which situations to apply them.","These two concepts guide my work. What does that really look like? If you're interested in more details, check out my page on process."],"styles":{"color":"white","fontWeight":"100","fontFamily":"Didot"}},"bgColor":"#36BF74","bgImg":""},{"type":"card-one","contentType":"card-content-one","contentStyleType":"centered","title":{"lines":["Process"],"styles":{"color":"white","fontWeight":"100","fontFamily":"Didot","margin":"0"}},"subtitle":{"lines":[],"styles":{"color":"white","fontWeight":"100","fontFamily":"Didot"}},"content":{"lines":["A process delivers exactly what it’s designed to deliver. A great process guarantees outstanding solutions and consistently delivers them.","Does yours?","How do you create that kind of process for yourself \u0026 your team?","Here's my approach: Own the process. Prepare like crazy. Measure success. Iterate.","Owning The Process: We've all heard the saying that we're our own worst enemy. To me, 'owning the process' means acknowledging that we, to a huge degree, are our own biggest obstacle. In a way, we're the problem! That sounds bad. I don't mean it like that. Acknowledging this invites us to admit what we don't know, ask question to learn, measure our performance, and keep iterating.","Prepare Like Crazy: Once you identify the \"big\" problem, it breaks down into smaller and smaller problems. This isn't a new concept in science and tech but it’s fundamentally true. Then you prepare for each individual problem by asking as many questions as possible to define the problem in detail. There's nothing more important than this. Every software cycle should focus on refining this ability, for both individuals and teams, and, over time, further questioning should become rare. In fact, that's a great thing to measure.","Measure success: Looking at ourselves in the mirror is tough. I’ve noticed that people tend to avoid this for a variety of reasons. Some are afraid they’ll fall short and face criticism, while others worry it might raise the bar for company expectations. But if we want to \"guarantee outstanding solutions and consistently deliver them,\" we can't avoid measuring our success. The good news is we're rewarded with countless benefits! We gain clarity about where we stand and what’s expected of us. As we grow, we build confidence and momentum. Ultimately, we get to deliver high-quality, high-impact work with a sense of joy.","Iterate: Even after doing all of the above, nothing's perfect. As we produce high-quality, high-impact work, mistakes will happen. Fix them, improve, and move forward. There’s no way around it. Letting go of perfectionism is what keeps the momentum going and the work joyful."],"styles":{"color":"white","fontWeight":"100","fontFamily":"Didot"}},"bgColor":"#CE3434","bgImg":""},{"type":"card-one","contentType":"card-content-one","contentStyleType":"centered","title":{"lines":["Skills"],"styles":{"color":"white","fontWeight":"100","fontFamily":"Didot","margin":"0"}},"subtitle":{"lines":[],"styles":{"color":"white","fontWeight":"100","fontFamily":"Didot"}},"content":{"lines":["The tech world is gigantic, with new technologies, languages, and frameworks popping up constantly. It's impossible to know everything, so what should you focus on? What are the most important skills?","Early in my career, I focused on languages—starting with JavaScript, Ruby, and Ruby on Rails. In my first full-time role, I picked up Java, Spring, and Angular. In my latest role, I've worked with Node, Nest, and Next. I also have experience with various database technologies like PostgreSQL, MySQL, Hibernate, MongoDB, Prisma, and Presto/Trino.","Along the way, I realized that many technologies solve the same problems in slightly different ways. That’s when I started shifting my focus toward higher-level concepts, designs, and processes that apply across technologies.","Recently I've focused on APIs, Caching, Multi-Threading, Queues, Distributed Systems, and Microservices.","More details coming soon…"],"styles":{"color":"white","fontWeight":"100","fontFamily":"Didot"}},"bgColor":"#5143D0","bgImg":""}]}}}},"__N_SSP":true},"page":"/ssr","query":{"name":"1"},"buildId":"development","isFallback":false,"gssp":true,"scriptLoader":[]}</script>
+  <script>window.addEventListener('load', function () {
       document.getElementById('loader').style.display = 'none';
       document.body.style.display = 'block';
       const foucStyleTags = document.querySelectorAll('style[data-next-hide-fouc]');
@@ -212,9 +129,6 @@
         styleTag.remove();
       });
       console.log('FOUC styles removed.');
-    }
-
-    function triggerTransitions() {
       const elements = document.querySelectorAll('.custom_fade');
       setTimeout(() => {
         elements.forEach(element => {
@@ -228,10 +142,7 @@
           });
         }, 1000);
       }, 1000);
-    }
-
-    doWork();
-  </script>
+    });</script>
 </body>
 
 </html>
